@@ -112,7 +112,7 @@ const automatePosting = async () => {
 };
 
 // Schedule the automation to run daily at a specific time
-cron.schedule('54 17 * * *', () => {
+cron.schedule('56 17 * * *', () => {
   console.log('Running daily automation task...');
   automatePosting();
 });
