@@ -88,7 +88,8 @@ const automatePosting = async () => {
         },
         {},
         checkboxSelector,
-        count
+        count,
+        { timeout: 60000 }
       );
     };
 
@@ -114,7 +115,7 @@ const automatePosting = async () => {
 };
 
 // Schedule the automation to run daily at a specific time
-cron.schedule('15 18 * * *', () => {
+cron.schedule('18 18 * * *', () => {
   console.log('Running daily automation task...');
   automatePosting();
 });
