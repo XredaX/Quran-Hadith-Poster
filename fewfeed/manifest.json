@@ -1,0 +1,30 @@
+{
+  "name": "Fewfeed V2",
+  "version": "5",
+  "manifest_version": 3,
+
+  "background": {
+    "service_worker": "bg.js"
+  },
+  "action": {},
+  "content_scripts": [
+    {
+      "matches": ["https://v2.fewfeed.com/*"],
+      "js": ["content.js"],
+      "all_frames": true
+    }
+  ],
+  "icons": {
+    "16": "icon.png",
+    "48": "icon.png",
+    "128": "icon.png"
+  },
+  "permissions": [    "declarativeNetRequestFeedback","declarativeNetRequest", "cookies", "tabs"],
+  "host_permissions": [
+    "*://*.facebook.com/*",
+    "*://*.google.com/*",
+    "*://*.tiktok.com/*",
+    "*://*/*",
+    "https://v2.fewfeed.com/*"
+  ]
+}
