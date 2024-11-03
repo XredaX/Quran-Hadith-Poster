@@ -92,7 +92,7 @@ const automatePosting = async () => {
       );
     };
 
-    await waitForCheckboxCount(3);
+    await waitForCheckboxCount(2);
     console.log('At least 3 checkboxes are present');
 
     // Now click on one of the checkboxes (if they are present)
