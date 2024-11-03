@@ -18,7 +18,9 @@ const launchBrowser = async () => {
       headless: true,
       args: [
         `--disable-extensions-except=${extensionPath}`,
-        `--load-extension=${extensionPath}`
+        `--load-extension=${extensionPath}`,
+        '--no-sandbox', // Add this line
+        '--disable-setuid-sandbox' // Add this line
       ]
     });
   }
