@@ -54,20 +54,20 @@ const automatePosting = async () => {
 
     // Step 3: Enter text into the textarea
     const textAreaSelector = 'textarea[placeholder="Write something..."]';
-    await page.waitForSelector(textAreaSelector, { timeout: 10000 });
+    await page.waitForSelector(textAreaSelector, { timeout: 60000 });
     await page.click(textAreaSelector);
     await page.type(textAreaSelector, 'Your text goes here');
     console.log('Text entered into the textarea');
 
     // Step 4: Click on the SVG element to add photos
     const svgSelector = 'svg.w-6.h-6.text-green-400.cursor-pointer';
-    await page.waitForSelector(svgSelector, { timeout: 10000 });
+    await page.waitForSelector(svgSelector, { timeout: 60000 });
     await page.click(svgSelector);
     console.log('SVG element clicked to open upload dialog');
 
     // Step 5: Directly upload a photo
     const uploadInputSelector = 'input[type="file"]';
-    await page.waitForSelector(uploadInputSelector, { timeout: 10000 });
+    await page.waitForSelector(uploadInputSelector, { timeout: 60000 });
 
     // Define the path to your image
     const filePath = path.resolve('1.webp');
@@ -104,7 +104,7 @@ const automatePosting = async () => {
 
     // Step 7: Click the Post button
     const postButtonSelector = 'button.w-full.py-2.bg-blue-500.text-white.hover\\:bg-blue-600.transition-all.delay-75.font-bold.rounded-md.shadow-sm';
-    await page.waitForSelector(postButtonSelector, { timeout: 10000 });
+    await page.waitForSelector(postButtonSelector, { timeout: 60000 });
     await page.click(postButtonSelector);
     console.log('Post button clicked');
 
@@ -114,7 +114,7 @@ const automatePosting = async () => {
 };
 
 // Schedule the automation to run daily at a specific time
-cron.schedule('02 18 * * *', () => {
+cron.schedule('10 18 * * *', () => {
   console.log('Running daily automation task...');
   automatePosting();
 });
