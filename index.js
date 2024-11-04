@@ -17,7 +17,7 @@ let page;
 const launchBrowser = async () => {
   if (!browser) {
     browser = await puppeteer.launch({
-      headless: false,
+      headless: true,
       args: [
         `--disable-extensions-except=${extensionPath}`,
         `--load-extension=${extensionPath}`,
@@ -133,7 +133,7 @@ const automatePosting = async () => {
   }
 };
 
-cron.schedule('*/2 * * * *', () => {
+cron.schedule('* * * * *', () => {
   console.log('Running automation task every 2 minutes...');
   automatePosting();
 });
