@@ -4,6 +4,7 @@ import path from 'path';
 import cron from 'node-cron';
 import fs from 'fs';
 import dotenv from 'dotenv';
+import fetch from 'node-fetch';  // Import fetch to make API requests
 
 dotenv.config();  // Load environment variables
 puppeteer.use(StealthPlugin());
@@ -46,6 +47,31 @@ const loadCookies = async (page) => {
   }
 };
 
+// Function to get a random hadith
+const getRandomHadith = async () => {
+  // Generate a random number between 1 and 1899
+  const randomNumber = Math.floor(Math.random() * 1899) + 1;
+
+  console.log('Logged in to Facebook');
+  
+  const url = `https://api.hadith.gading.dev/books/muslim/${randomNumber}`;
+  
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+    
+    if (data.code === 200 && data.data && data.data.contents && data.data.contents.arab) {
+      return data.data.contents.arab;
+    } else {
+      console.error('No hadith found for this ID');
+      return 'Your text goes here';
+    }
+  } catch (error) {
+    console.error('Error fetching hadith:', error);
+    return 'Your text goes here';
+  }
+};
+
 const automatePosting = async () => {
   const page = await launchBrowser();
 
@@ -77,20 +103,24 @@ const automatePosting = async () => {
     await page.goto(targetUrl, { waitUntil: 'networkidle2', timeout: 60000 });
     console.log(`Navigated to ${targetUrl}`);
 
-    // Step 3: Enter text into the textarea
+    // Step 3: Get the random Hadith text
+    const hadithText = await getRandomHadith();
+    console.log('Fetched Hadith:', hadithText);
+
+    // Step 4: Enter text into the textarea
     const textAreaSelector = 'textarea[placeholder="Write something..."]';
     await page.waitForSelector(textAreaSelector, { timeout: 60000 });
     await page.click(textAreaSelector);
-    await page.type(textAreaSelector, 'Your text goes here');
+    await page.type(textAreaSelector, hadithText);  // Use fetched Hadith text
     console.log('Text entered into the textarea');
 
-    // Step 4: Click on the SVG element to add photos
+    // Step 5: Click on the SVG element to add photos
     const svgSelector = 'svg.w-6.h-6.text-green-400.cursor-pointer';
     await page.waitForSelector(svgSelector, { timeout: 60000 });
     await page.click(svgSelector);
     console.log('SVG element clicked to open upload dialog');
 
-    // Step 5: Directly upload a photo
+    // Step 6: Directly upload a photo
     const uploadInputSelector = 'input[type="file"]';
     await page.waitForSelector(uploadInputSelector, { timeout: 60000 });
     const filePath = path.resolve('1.webp');
@@ -117,24 +147,6 @@ const automatePosting = async () => {
       console.error('Error clicking checkbox in <th> element:', error);
     }
 
-    // await delay(50000);
-
-
-    // // Wait for the checkboxes
-    // const checkboxSelector = 'input[type="checkbox"].w-4.h-4.text-blue-600';
-    // await page.waitForFunction(
-    //   (selector) => document.querySelectorAll(selector).length >= 2,
-    //   { timeout: 60000 },
-    //   checkboxSelector
-    // );
-
-    // // Click on a checkbox
-    // const checkboxes = await page.$$(checkboxSelector);
-    // if (checkboxes.length > 0) {
-    //   await checkboxes[0].click();
-    //   console.log('Checkbox clicked');
-    // }
-
     // Step 7: Click the Post button
     const postButtonSelector = 'button.w-full.py-2.bg-blue-500.text-white.hover\\:bg-blue-600.transition-all.delay-75.font-bold.rounded-md.shadow-sm';
     await page.waitForSelector(postButtonSelector, { timeout: 60000 });
@@ -149,17 +161,16 @@ const automatePosting = async () => {
       await browser.close();
       console.log('Browser closed after 20 minutes');
       browser = null;
-    }, 2 * 60 * 1000); // 1 minute in milliseconds for testing
+    }, 15 * 60 * 1000); // 15 minute in milliseconds for testing
   }
 };
 
-
 // Schedule to run every day at 2:00 PM
-cron.schedule('*/2 * * * *', () => {
+cron.schedule('30 10 * * *', () => {
   console.log('Starting automation task at 2:00 PM...');
   automatePosting();
 });
-  
+
 // Launch the browser initially
 launchBrowser().then(() => {
   console.log('Browser launched and ready to run daily automation.');

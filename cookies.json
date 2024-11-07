@@ -1,10 +1,10 @@
 [
   {
     "name": "fr",
-    "value": "1ic05dDb1JFArQepc.AWWcsZP__KTDlKgwvoodbqV9xcA.BnLTpN..AAA.0.0.BnLTpN.AWUFDDT4_q8",
+    "value": "19ewaX9bQGtFMRa8l.AWVIN5GSnnXpfbn-uhfAqmZ7hrI.BnLUYD..AAA.0.0.BnLUat.AWXS6ezJdmQ",
     "domain": ".facebook.com",
     "path": "/",
-    "expires": 1738793293.456849,
+    "expires": 1738796460.88582,
     "size": 82,
     "httpOnly": true,
     "secure": true,
@@ -45,21 +45,6 @@
     "sourceScheme": "Secure"
   },
   {
-    "name": "xs",
-    "value": "14%3AfEs8sniQ0-S7Lg%3A2%3A1731015306%3A-1%3A6963%3A%3AAcX6nGuTWUix4U1nVooKMynSMKqYq4og9VD1RyoHCA",
-    "domain": ".facebook.com",
-    "path": "/",
-    "expires": 1762553293.456907,
-    "size": 98,
-    "httpOnly": true,
-    "secure": true,
-    "session": false,
-    "sameSite": "None",
-    "priority": "Medium",
-    "sameParty": false,
-    "sourceScheme": "Secure"
-  },
-  {
     "name": "ps_n",
     "value": "1",
     "domain": ".facebook.com",
@@ -75,8 +60,23 @@
     "sourceScheme": "Secure"
   },
   {
+    "name": "xs",
+    "value": "14%3AfEs8sniQ0-S7Lg%3A2%3A1731015306%3A-1%3A6963%3A%3AAcWljKUaqkKSysi5LQIbRSQj1j0Qw5hI4U2xfdIwZQ",
+    "domain": ".facebook.com",
+    "path": "/",
+    "expires": 1762556292.431606,
+    "size": 98,
+    "httpOnly": true,
+    "secure": true,
+    "session": false,
+    "sameSite": "None",
+    "priority": "Medium",
+    "sameParty": false,
+    "sourceScheme": "Secure"
+  },
+  {
     "name": "presence",
-    "value": "C%7B%22t3%22%3A%5B%5D%2C%22utc3%22%3A1731017294107%2C%22v%22%3A1%7D",
+    "value": "C%7B%22t3%22%3A%5B%5D%2C%22utc3%22%3A1731020467040%2C%22v%22%3A1%7D",
     "domain": ".facebook.com",
     "path": "/",
     "expires": -1,
@@ -93,7 +93,7 @@
     "value": "1034x653",
     "domain": ".facebook.com",
     "path": "/",
-    "expires": 1731622091,
+    "expires": 1731625265,
     "size": 10,
     "httpOnly": false,
     "secure": true,
@@ -138,7 +138,7 @@
     "value": "100041000920582",
     "domain": ".facebook.com",
     "path": "/",
-    "expires": 1762553293.456762,
+    "expires": 1762556292.431489,
     "size": 21,
     "httpOnly": false,
     "secure": true,
