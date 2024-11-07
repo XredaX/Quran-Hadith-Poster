@@ -117,7 +117,7 @@ const automatePosting = async () => {
       console.error('Error clicking checkbox in <th> element:', error);
     }
 
-    await delay(50000);
+    // await delay(50000);
 
 
     // // Wait for the checkboxes
