@@ -46,38 +46,35 @@ const loadCookies = async (page) => {
   }
 };
 
-// Function to automate posting
 const automatePosting = async () => {
   const page = await launchBrowser();
 
   try {
     await loadCookies(page);  // Load cookies if they exist
-    await page.goto('https://www.facebook.com/', { waitUntil: 'networkidle2' });
+    await page.goto('https://www.facebook.com/', { waitUntil: 'networkidle2', timeout: 60000 });
 
     // Check if login is needed
     if (await page.$('#email') !== null) {
       console.log('Logging in as cookies are not valid or expired');
 
-      // await page.type('#email', process.env.FB_EMAIL);
-      // await page.type('#pass', process.env.FB_PASSWORD);
-
       await page.type('#email', 'redaelbettioui2968@gmail.com');
       await page.type('#pass', '{REDA2001}');
-
       await page.click('[name="login"]');
-      await page.waitForNavigation({ waitUntil: 'networkidle2' });
+      await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 60000 });
       console.log('Logged in to Facebook');
-
     } else {
       console.log('Logged in using saved cookies');
     }
+
+    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+    await delay(5000);
 
     // Save cookies after logging in
     await saveCookies(page);
 
     // Proceed with automation
     const targetUrl = 'https://v2.fewfeed.com/tool/auto-post-fb-group';
-    await page.goto(targetUrl, { waitUntil: 'networkidle2' });
+    await page.goto(targetUrl, { waitUntil: 'networkidle2', timeout: 60000 });
     console.log(`Navigated to ${targetUrl}`);
 
     // Step 3: Enter text into the textarea
@@ -101,19 +98,13 @@ const automatePosting = async () => {
     await inputUploadHandle.uploadFile(filePath);
     console.log('File uploaded directly');
 
-    // Step 6: Wait for at least 3 checkboxes to appear
+    // Wait for the checkboxes
     const checkboxSelector = 'input[type="checkbox"].w-4.h-4.text-blue-600';
-    const waitForCheckboxCount = async (count) => {
-      await page.waitForFunction(
-        (selector, count) => document.querySelectorAll(selector).length >= count,
-        {},
-        checkboxSelector,
-        count,
-        { timeout: 60000 }
-      );
-    };
-    await waitForCheckboxCount(2);
-    console.log('At least 3 checkboxes are present');
+    await page.waitForFunction(
+      (selector) => document.querySelectorAll(selector).length >= 2,
+      { timeout: 60000 },
+      checkboxSelector
+    );
 
     // Click on a checkbox
     const checkboxes = await page.$$(checkboxSelector);
@@ -130,15 +121,23 @@ const automatePosting = async () => {
 
   } catch (error) {
     console.error('Error during automation:', error);
+  } finally {
+    // Close the browser after 20 minutes
+    setTimeout(async () => {
+      await browser.close();
+      console.log('Browser closed after 20 minutes');
+      browser = null;
+    }, 1 * 60 * 1000); // 1 minute in milliseconds for testing
   }
 };
 
-cron.schedule('* * * * *', () => {
-  console.log('Running automation task every 2 minutes...');
+
+// Schedule to run every day at 2:00 PM
+cron.schedule('*/1 * * * *', () => {
+  console.log('Starting automation task at 2:00 PM...');
   automatePosting();
 });
-
-
+  
 // Launch the browser initially
 launchBrowser().then(() => {
   console.log('Browser launched and ready to run daily automation.');
