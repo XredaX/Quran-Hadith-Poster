@@ -17,7 +17,7 @@ let page;
 const launchBrowser = async () => {
   if (!browser) {
     browser = await puppeteer.launch({
-      headless: true,
+      headless: false,
       args: [
         `--disable-extensions-except=${extensionPath}`,
         `--load-extension=${extensionPath}`,
@@ -100,20 +100,40 @@ const automatePosting = async () => {
 
     await delay(5000);
 
-    // Wait for the checkboxes
-    const checkboxSelector = 'input[type="checkbox"].w-4.h-4.text-blue-600';
-    await page.waitForFunction(
-      (selector) => document.querySelectorAll(selector).length >= 2,
-      { timeout: 60000 },
-      checkboxSelector
-    );
+    // Define the selector for the specific checkbox within the <th> element
+    const checkboxInTableHeaderSelector = 'th.px-5.py-3.bg-white.text-left.font-semibold.text-gray-100.uppercase.tracking-wider.flex.space-x-1.items-center.h-full input[type="checkbox"].w-4.h-4.text-blue-600';
 
-    // Click on a checkbox
-    const checkboxes = await page.$$(checkboxSelector);
-    if (checkboxes.length > 0) {
-      await checkboxes[0].click();
-      console.log('Checkbox clicked');
+    // Wait for the checkbox to appear and click it
+    try {
+      await page.waitForSelector(checkboxInTableHeaderSelector, { timeout: 60000 });
+      const checkbox = await page.$(checkboxInTableHeaderSelector);
+      if (checkbox) {
+        await checkbox.click();
+        console.log('Checkbox within <th> element clicked');
+      } else {
+        console.log('Checkbox within <th> element not found');
+      }
+    } catch (error) {
+      console.error('Error clicking checkbox in <th> element:', error);
     }
+
+    await delay(50000);
+
+
+    // // Wait for the checkboxes
+    // const checkboxSelector = 'input[type="checkbox"].w-4.h-4.text-blue-600';
+    // await page.waitForFunction(
+    //   (selector) => document.querySelectorAll(selector).length >= 2,
+    //   { timeout: 60000 },
+    //   checkboxSelector
+    // );
+
+    // // Click on a checkbox
+    // const checkboxes = await page.$$(checkboxSelector);
+    // if (checkboxes.length > 0) {
+    //   await checkboxes[0].click();
+    //   console.log('Checkbox clicked');
+    // }
 
     // Step 7: Click the Post button
     const postButtonSelector = 'button.w-full.py-2.bg-blue-500.text-white.hover\\:bg-blue-600.transition-all.delay-75.font-bold.rounded-md.shadow-sm';
