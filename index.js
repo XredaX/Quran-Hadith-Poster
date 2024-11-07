@@ -127,13 +127,13 @@ const automatePosting = async () => {
       await browser.close();
       console.log('Browser closed after 20 minutes');
       browser = null;
-    }, 1 * 60 * 1000); // 1 minute in milliseconds for testing
+    }, 2 * 60 * 1000); // 1 minute in milliseconds for testing
   }
 };
 
 
 // Schedule to run every day at 2:00 PM
-cron.schedule('*/1 * * * *', () => {
+cron.schedule('*/2 * * * *', () => {
   console.log('Starting automation task at 2:00 PM...');
   automatePosting();
 });
