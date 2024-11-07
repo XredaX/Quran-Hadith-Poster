@@ -98,6 +98,8 @@ const automatePosting = async () => {
     await inputUploadHandle.uploadFile(filePath);
     console.log('File uploaded directly');
 
+    await delay(5000);
+
     // Wait for the checkboxes
     const checkboxSelector = 'input[type="checkbox"].w-4.h-4.text-blue-600';
     await page.waitForFunction(
