@@ -93,7 +93,7 @@ const automatePosting = async () => {
     }
 
     const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-    await delay(5000);
+    await delay(3000);
 
     // Save cookies after logging in
     await saveCookies(page);
@@ -114,21 +114,21 @@ const automatePosting = async () => {
     await page.type(textAreaSelector, hadithText);  // Use fetched Hadith text
     console.log('Text entered into the textarea');
 
-    // Step 5: Click on the SVG element to add photos
-    const svgSelector = 'svg.w-6.h-6.text-green-400.cursor-pointer';
-    await page.waitForSelector(svgSelector, { timeout: 60000 });
-    await page.click(svgSelector);
-    console.log('SVG element clicked to open upload dialog');
+    // // Step 5: Click on the SVG element to add photos
+    // const svgSelector = 'svg.w-6.h-6.text-green-400.cursor-pointer';
+    // await page.waitForSelector(svgSelector, { timeout: 60000 });
+    // await page.click(svgSelector);
+    // console.log('SVG element clicked to open upload dialog');
 
-    // Step 6: Directly upload a photo
-    const uploadInputSelector = 'input[type="file"]';
-    await page.waitForSelector(uploadInputSelector, { timeout: 60000 });
-    const filePath = path.resolve('1.webp');
-    const inputUploadHandle = await page.$(uploadInputSelector);
-    await inputUploadHandle.uploadFile(filePath);
-    console.log('File uploaded directly');
+    // // Step 6: Directly upload a photo
+    // const uploadInputSelector = 'input[type="file"]';
+    // await page.waitForSelector(uploadInputSelector, { timeout: 60000 });
+    // const filePath = path.resolve('1.webp');
+    // const inputUploadHandle = await page.$(uploadInputSelector);
+    // await inputUploadHandle.uploadFile(filePath);
+    // console.log('File uploaded directly');
 
-    await delay(5000);
+    await delay(10000);
 
     // Define the selector for the specific checkbox within the <th> element
     const checkboxInTableHeaderSelector = 'th.px-5.py-3.bg-white.text-left.font-semibold.text-gray-100.uppercase.tracking-wider.flex.space-x-1.items-center.h-full input[type="checkbox"].w-4.h-4.text-blue-600';
@@ -146,6 +146,7 @@ const automatePosting = async () => {
     } catch (error) {
       console.error('Error clicking checkbox in <th> element:', error);
     }
+
 
     // Step 7: Click the Post button
     const postButtonSelector = 'button.w-full.py-2.bg-blue-500.text-white.hover\\:bg-blue-600.transition-all.delay-75.font-bold.rounded-md.shadow-sm';
@@ -166,7 +167,7 @@ const automatePosting = async () => {
 };
 
 // Schedule to run every day at 2:00 PM
-cron.schedule('30 10 * * *', () => {
+cron.schedule('*/3 * * * *', () => {
   console.log('Starting automation task at 2:00 PM...');
   automatePosting();
 });
