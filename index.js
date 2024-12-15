@@ -25,7 +25,7 @@ const launchBrowser = async () => {
   try {
     if (!browser) {
       browser = await puppeteer.launch({
-        headless: true,  // Changed to true for production
+        headless: process.env.HEADLESS === 'true',  // Changed to true for production
         args: [
           `--disable-extensions-except=${extensionPath}`,
           `--load-extension=${extensionPath}`,
@@ -207,7 +207,7 @@ const getNextQuranPage = () => {
 const getQuranImage = async () => {
   const pageNumber = getNextQuranPage();
   const quranImagesDir = path.resolve('quran-images');
-  const imagePath = path.join(quranImagesDir, `${pageNumber}.png`);
+  const imagePath = path.join(quranImagesDir, `${pageNumber}.jpg`);
   
   try {
     // Check if image exists
