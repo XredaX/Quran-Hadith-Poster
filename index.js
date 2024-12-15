@@ -18,6 +18,9 @@ const RETRY_DELAY = 5000; // 5 seconds
 let browser;
 let page;
 
+// Global variable to store cookies in memory during runtime
+let runtimeCookies = null;
+
 const launchBrowser = async () => {
   try {
     if (!browser) {
@@ -60,19 +63,25 @@ const loadCookies = async (page) => {
     let cookies;
     
     if (process.env.NODE_ENV === 'production') {
-      // In production, use cookies from environment variable
-      console.log('Loading cookies from environment variable in production mode');
-      try {
-        cookies = JSON.parse(process.env.FACEBOOK_COOKIES);
-        if (!Array.isArray(cookies)) {
-          throw new Error('Invalid cookie format in environment variable');
+      if (runtimeCookies) {
+        console.log('Using cookies from runtime memory');
+        cookies = runtimeCookies;
+      } else {
+        console.log('Loading initial cookies from environment variable');
+        try {
+          cookies = JSON.parse(process.env.FACEBOOK_COOKIES);
+          if (!Array.isArray(cookies)) {
+            throw new Error('Invalid cookie format in environment variable');
+          }
+          // Store cookies in runtime memory
+          runtimeCookies = cookies;
+        } catch (parseError) {
+          console.error('Error parsing cookies from environment:', parseError);
+          return false;
         }
-      } catch (parseError) {
-        console.error('Error parsing cookies from environment:', parseError);
-        return false;
       }
     } else {
-      // In development, use cookies from file
+      // Development mode - use file
       console.log('Loading cookies from file in development mode');
       const cookiesPath = path.resolve('cookies.json');
       if (!fs.existsSync(cookiesPath)) {
@@ -107,15 +116,16 @@ const saveCookies = async (page) => {
   try {
     const cookies = await page.cookies();
     
-    if (process.env.NODE_ENV !== 'production') {
-      // Only save cookies to file in development mode
+    if (process.env.NODE_ENV === 'production') {
+      // Update runtime cookies
+      runtimeCookies = cookies;
+      console.log('Cookies updated in runtime memory');
+    } else {
+      // Development mode - save to file
       const cookiesPath = path.resolve('cookies.json');
       fs.writeFileSync(cookiesPath, JSON.stringify(cookies, null, 2));
       console.log('Cookies saved to file');
     }
-    
-    // In production, cookies are managed through environment variables
-    // and don't need to be saved back
     
     return true;
   } catch (error) {
@@ -218,7 +228,9 @@ const getQuranImage = async () => {
 const automatePosting = async () => {
   try {
     const page = await launchBrowser();
-    await loadCookies(page);
+    
+    // Load cookies
+    const cookiesLoaded = await loadCookies(page);
     
     // Get Quran image from local directory
     const quranImage = await getQuranImage();
@@ -236,8 +248,14 @@ const automatePosting = async () => {
         page.click('[name="login"]'),
         page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 })
       ]);
+      // Save new cookies after login
       await saveCookies(page);
+    } else {
+      console.log('Using existing session');
     }
+
+    // Save cookies after successful navigation
+    await saveCookies(page);
 
     // Reduced delay
     await delay(1000);
