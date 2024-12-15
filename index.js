@@ -22,7 +22,7 @@ const launchBrowser = async () => {
   try {
     if (!browser) {
       browser = await puppeteer.launch({
-        headless: false,  // Changed to true for production
+        headless: true,  // Changed to true for production
         args: [
           `--disable-extensions-except=${extensionPath}`,
           `--load-extension=${extensionPath}`,
