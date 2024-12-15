@@ -2,6 +2,20 @@
 
 An automated application for posting Quran pages and Hadith content to Facebook groups. This bot helps spread Islamic knowledge by systematically sharing Quran pages and authentic Hadith across multiple Facebook groups. Once configured, it will automatically post to all your specified groups based on your schedule (hourly, daily, or any custom interval you set using cron expressions).
 
+## How It Works
+
+This application leverages the [Fewfeed Chrome Extension](https://fewfeed.com/) to automate the posting process. Here's how it works:
+
+1. The app uses Puppeteer to control a Chrome browser instance with the Fewfeed extension installed
+2. It automatically logs into your Facebook account (using either credentials or cookies)
+3. For each posting cycle:
+   - Selects the next sequential Quran page from the `quran-images` directory
+   - Fetches a random Hadith from the Hadith API
+   - Uses Fewfeed's functionality to post this content to your configured Facebook groups
+   - Maintains a record of the last posted page to ensure sequential posting
+4. The entire process runs automatically based on your configured schedule (CRON_SCHEDULE)
+5. In development mode (HEADLESS=false), you can watch the automation process in action
+
 ## Features
 
 - 🕌 Sequential posting of Quran pages with proper formatting
@@ -80,4 +94,7 @@ The Quran pages images used in this project are sourced from:
 - [Quran Pages Images Repository](https://github.com/zeyadetman/quran-pages-images) by zeyadetman
 
 ### Hadith Sources
-The Hadith content is carefully selected from authentic sources using the [Hadith API](https://api.hadith.gading.dev/) 
+The Hadith content is carefully selected from authentic sources using the [Hadith API](https://api.hadith.gading.dev/)
+
+### Chrome Extension
+The automation is powered by [Fewfeed](https://fewfeed.com/) - a powerful Chrome extension for automated Facebook group posting
