@@ -97,32 +97,49 @@ const getRandomHadith = async () => {
   return 'Your text goes here';
 };
 
-// Function to get and increment the Quran page number
+// Function to get next Quran page
 const getNextQuranPage = () => {
-  let currentPage = parseInt(process.env.CURRENT_PAGE) || 1;
-  const totalPages = 604;
-  
-  // Read the current .env file content
-  const envPath = path.resolve('.env');
-  const envContent = fs.readFileSync(envPath, 'utf-8');
-  
-  // Calculate next page
-  const nextPage = currentPage >= totalPages ? 1 : currentPage + 1;
-  
-  // Update the .env file with the new page number
-  const updatedContent = envContent.replace(
-    /CURRENT_PAGE=\d+/,
-    `CURRENT_PAGE=${nextPage}`
-  );
-  fs.writeFileSync(envPath, updatedContent);
-  
-  // Update process.env for current execution
-  process.env.CURRENT_PAGE = nextPage.toString();
-  
-  return currentPage;
+  try {
+    // Get current page from environment variable
+    let currentPage = parseInt(process.env.CURRENT_PAGE || '1');
+    
+    // Validate page number
+    if (isNaN(currentPage) || currentPage < 1) {
+      console.warn('Invalid CURRENT_PAGE value, resetting to 1');
+      currentPage = 1;
+    }
+    
+    // Calculate next page
+    const nextPage = currentPage >= 604 ? 1 : currentPage + 1;
+    
+    // Update environment variable for next run
+    process.env.CURRENT_PAGE = nextPage.toString();
+    
+    // In local development, try to update .env file
+    if (process.env.NODE_ENV !== 'production') {
+      try {
+        const envPath = path.resolve('.env');
+        if (fs.existsSync(envPath)) {
+          let envContent = fs.readFileSync(envPath, 'utf8');
+          envContent = envContent.replace(
+            /CURRENT_PAGE=\d+/,
+            `CURRENT_PAGE=${nextPage}`
+          );
+          fs.writeFileSync(envPath, envContent);
+        }
+      } catch (err) {
+        console.warn('Could not update .env file:', err.message);
+      }
+    }
+    
+    return currentPage;
+  } catch (error) {
+    console.error('Error in getNextQuranPage:', error);
+    return 1; // Return 1 as fallback
+  }
 };
 
-// Function to get Quran page image from local directory
+// Function to get Quran image from local directory
 const getQuranImage = async () => {
   const pageNumber = getNextQuranPage();
   const quranImagesDir = path.resolve('quran-images');
@@ -131,10 +148,12 @@ const getQuranImage = async () => {
   try {
     // Check if image exists
     if (!fs.existsSync(imagePath)) {
+      console.error(`Quran page ${pageNumber} not found at path: ${imagePath}`);
+      console.error('Directory contents:', fs.readdirSync(quranImagesDir));
       throw new Error(`Quran page ${pageNumber} not found in local directory`);
     }
     
-    console.log(`Using Quran page ${pageNumber} from local directory`);
+    console.log(`Using Quran page ${pageNumber} from local directory: ${imagePath}`);
     return { success: true, path: imagePath, pageNumber };
   } catch (error) {
     console.error('Error accessing Quran page:', error);

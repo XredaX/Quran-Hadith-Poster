@@ -19,7 +19,8 @@ RUN apt-get update && apt-get install -y \
 
 # Set environment variables
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium \
+    NODE_ENV=production
 
 # Create and set working directory
 WORKDIR /app
@@ -30,8 +31,14 @@ COPY package*.json ./
 # Install dependencies
 RUN npm install
 
-# Copy project files
+# Copy Quran images first (they're essential)
+COPY quran-images ./quran-images
+
+# Copy project files (excluding what's in .dockerignore)
 COPY . .
+
+# Verify Quran images are present
+RUN ls -la quran-images/
 
 # Start the application
 CMD ["node", "index.js"]
