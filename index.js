@@ -134,94 +134,73 @@ const saveCookies = async (page) => {
   }
 };
 
-// Function to get a random hadith
-const getRandomHadith = async () => {
-  const randomNumber = Math.floor(Math.random() * 1899) + 1;
-  const url = `https://api.hadith.gading.dev/books/muslim/${randomNumber}`;
+// Function to get next sequential number
+const getNextNumber = () => {
+  let currentPage = parseInt(process.env.CURRENT_PAGE) || 1;
+  const maxPage = 604; // Total number of Quran pages
+  
+  // Save the next page number
+  const nextPage = currentPage >= maxPage ? 1 : currentPage + 1;
+  process.env.CURRENT_PAGE = nextPage.toString();
+  
+  // Save to .env file
+  const envPath = path.resolve('.env');
+  const envContent = fs.readFileSync(envPath, 'utf8');
+  const updatedContent = envContent.replace(
+    /CURRENT_PAGE=\d+/,
+    `CURRENT_PAGE=${nextPage}`
+  );
+  fs.writeFileSync(envPath, updatedContent);
+  
+  return currentPage;
+};
+
+// Function to get the next sequential hadith
+const getSequentialHadith = async () => {
+  const currentPage = getNextNumber();
+  const url = `https://api.hadith.gading.dev/books/bukhari/${currentPage}`;
   
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
       const response = await fetch(url);
       const data = await response.json();
       
-      if (data.code === 200 && data.data?.contents?.arab) {
+      if (data.data && data.data.contents) {
         return data.data.contents.arab;
       }
-      console.warn(`No hadith found for ID ${randomNumber}, attempt ${attempt}`);
       
-      if (attempt < MAX_RETRIES) {
-        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
-      }
+      console.error('Invalid hadith data structure:', data);
+      return 'اَللَّهُمَّ صَلِّ وَسَلِّمْ وَباَرِكْ عَلىَ سَيِّدِناَ وَمَوْلاَناَ مُحَمَّدٍ';
     } catch (error) {
-      console.error(`Error fetching hadith (attempt ${attempt}):`, error);
-      if (attempt === MAX_RETRIES) throw error;
+      console.error(`Attempt ${attempt} failed:`, error);
+      if (attempt === MAX_RETRIES) {
+        return 'اَللَّهُمَّ صَلِّ وَسَلِّمْ وَباَرِكْ عَلىَ سَيِّدِناَ وَمَوْلاَناَ مُحَمَّدٍ';
+      }
       await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
     }
   }
-  return 'اَللَّهُمَّ صَلِّ وَسَلِّمْ وَباَرِكْ عَلىَ سَيِّدِناَ وَمَوْلاَناَ مُحَمَّدٍ شَجَرَةِ اْلاَصْلِ النُّوْرَانِيَّةِ، وَلَمْعَةِ الْقَبْضَةِ الرَّحْمَانِيَّةِ، وَأَفْضَلِ الْخَلِيْقَةِ اْلاِنْسَانِيَّةِ، وَأَشْرَفِ الصُّوْرَةِ الْجِسْمَانِيَّةِ، وَمَعْدِنِ اْلاَسْرَارِ الرَبَّانيِّةِ، وَخَزَائِنِ الْعُلُوْمِ اْلاِصْطِفَائِيَّةِ، صَاحِبِ الْقَبْضَةِ اْلاَصْلِيَّةِ، وَالْبَهْجَةِ السَّنِيَّةِ، وَالرُّتْبَةِ الْعَلِيَّةِ، مَنِ انْدَرَجَتِ النَّبِيُّوْنَ تَحْتَ لِوَائِهِ، فَهُمْ مِنْهُ وَاِلَيْهِ، وَصَلِّ وَسَلِّمْ وَباَرِكْ عَلَيْهِ وَعَلىَ آلِهِ وَصَحْبِهِ عَدَدَ مَاخَلَقْتَ، وَرَزَقْتَ وَأَمَتَّ وَأَحْييْتَ اِلَى يَوْمِ تَبْعَثُ مَنْ أَفْنَيْتَ، وَسَلِّمْ تَسْلِيْماً كَثِيْراً وَالْحَمْدُ ِللهِ رَبِّ الْعَالَمِيْنَ.';
 };
 
 // Function to get next Quran page
-const getNextQuranPage = () => {
-  try {
-    // Get current page from environment variable
-    let currentPage = parseInt(process.env.CURRENT_PAGE || '1');
-    
-    // Validate page number
-    if (isNaN(currentPage) || currentPage < 1) {
-      console.warn('Invalid CURRENT_PAGE value, resetting to 1');
-      currentPage = 1;
-    }
-    
-    // Calculate next page
-    const nextPage = currentPage >= 604 ? 1 : currentPage + 1;
-    
-    // Update environment variable for next run
-    process.env.CURRENT_PAGE = nextPage.toString();
-    
-    // In local development, try to update .env file
-    if (process.env.NODE_ENV !== 'production') {
-      try {
-        const envPath = path.resolve('.env');
-        if (fs.existsSync(envPath)) {
-          let envContent = fs.readFileSync(envPath, 'utf8');
-          envContent = envContent.replace(
-            /CURRENT_PAGE=\d+/,
-            `CURRENT_PAGE=${nextPage}`
-          );
-          fs.writeFileSync(envPath, envContent);
-        }
-      } catch (err) {
-        console.warn('Could not update .env file:', err.message);
-      }
-    }
-    
-    return currentPage;
-  } catch (error) {
-    console.error('Error in getNextQuranPage:', error);
-    return 1; // Return 1 as fallback
-  }
-};
-
-// Function to get Quran image from local directory
 const getQuranImage = async () => {
-  const pageNumber = getNextQuranPage();
+  const pageNumber = getNextNumber();
   const quranImagesDir = path.resolve('quran-images');
   const imagePath = path.join(quranImagesDir, `${pageNumber}.jpg`);
   
   try {
     // Check if image exists
-    if (!fs.existsSync(imagePath)) {
-      console.error(`Quran page ${pageNumber} not found at path: ${imagePath}`);
-      console.error('Directory contents:', fs.readdirSync(quranImagesDir));
-      throw new Error(`Quran page ${pageNumber} not found in local directory`);
-    }
-    
-    console.log(`Using Quran page ${pageNumber} from local directory: ${imagePath}`);
-    return { success: true, path: imagePath, pageNumber };
+    await fs.promises.access(imagePath);
+    return {
+      success: true,
+      path: imagePath,
+      pageNumber
+    };
   } catch (error) {
-    console.error('Error accessing Quran page:', error);
-    return { success: false };
+    console.error(`Error accessing Quran image: ${error.message}`);
+    return {
+      success: false,
+      error: `Could not find Quran page ${pageNumber}`
+    };
   }
 };
 
@@ -266,7 +245,7 @@ const automatePosting = async () => {
     console.log(`Navigated to ${targetUrl}`);
 
     // Get hadith text
-    const hadithText = await getRandomHadith();
+    const hadithText = await getSequentialHadith();
     await page.waitForSelector('textarea[placeholder="Write something..."]', { timeout: 30000 });
     
     if (!quranImage.success) {
