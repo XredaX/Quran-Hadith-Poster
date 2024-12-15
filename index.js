@@ -54,56 +54,73 @@ const launchBrowser = async () => {
   }
 };
 
-// Function to load cookies
+// Function to load cookies based on environment
 const loadCookies = async (page) => {
   try {
-    const cookiesPath = path.resolve('cookies.json');
+    let cookies;
     
-    // Check if cookies file exists and is not empty
-    if (fs.existsSync(cookiesPath)) {
-      const cookiesData = fs.readFileSync(cookiesPath, 'utf8');
-      if (cookiesData && cookiesData.trim()) {
-        const cookies = JSON.parse(cookiesData);
-        
-        // Validate cookies before setting them
-        if (Array.isArray(cookies) && cookies.length > 0) {
-          // Check if cookies are expired
-          const now = new Date().getTime();
-          const validCookies = cookies.filter(cookie => {
-            return !cookie.expires || new Date(cookie.expires * 1000).getTime() > now;
-          });
-          
-          if (validCookies.length > 0) {
-            await page.setCookie(...validCookies);
-            console.log('Cookies loaded successfully');
-            return;
-          }
+    if (process.env.NODE_ENV === 'production') {
+      // In production, use cookies from environment variable
+      console.log('Loading cookies from environment variable in production mode');
+      try {
+        cookies = JSON.parse(process.env.FACEBOOK_COOKIES);
+        if (!Array.isArray(cookies)) {
+          throw new Error('Invalid cookie format in environment variable');
         }
+      } catch (parseError) {
+        console.error('Error parsing cookies from environment:', parseError);
+        return false;
+      }
+    } else {
+      // In development, use cookies from file
+      console.log('Loading cookies from file in development mode');
+      const cookiesPath = path.resolve('cookies.json');
+      if (!fs.existsSync(cookiesPath)) {
+        console.log('No cookies file found');
+        return false;
+      }
+      try {
+        cookies = JSON.parse(fs.readFileSync(cookiesPath, 'utf8'));
+      } catch (fileError) {
+        console.error('Error reading cookies from file:', fileError);
+        return false;
       }
     }
-    
-    console.log('No valid cookies found, will need to login');
+
+    // Validate and set cookies
+    if (Array.isArray(cookies) && cookies.length > 0) {
+      await page.setCookie(...cookies);
+      console.log('Cookies loaded successfully');
+      return true;
+    } else {
+      console.log('No valid cookies found');
+      return false;
+    }
   } catch (error) {
-    console.error('Error loading cookies:', error);
-    console.log('Will proceed with login due to cookie error');
+    console.error('Error in loadCookies:', error);
+    return false;
   }
 };
 
 // Function to save cookies
 const saveCookies = async (page) => {
   try {
-    const cookiesPath = path.resolve('cookies.json');
     const cookies = await page.cookies();
     
-    // Only save if we have cookies
-    if (cookies && cookies.length > 0) {
+    if (process.env.NODE_ENV !== 'production') {
+      // Only save cookies to file in development mode
+      const cookiesPath = path.resolve('cookies.json');
       fs.writeFileSync(cookiesPath, JSON.stringify(cookies, null, 2));
-      console.log('Cookies saved successfully');
-    } else {
-      console.warn('No cookies to save');
+      console.log('Cookies saved to file');
     }
+    
+    // In production, cookies are managed through environment variables
+    // and don't need to be saved back
+    
+    return true;
   } catch (error) {
     console.error('Error saving cookies:', error);
+    return false;
   }
 };
 
@@ -201,47 +218,34 @@ const getQuranImage = async () => {
 const automatePosting = async () => {
   try {
     const page = await launchBrowser();
-    
-    // Load cookies at the start
     await loadCookies(page);
     
     // Get Quran image from local directory
     const quranImage = await getQuranImage();
     
-    // Navigate to Facebook with longer timeout
-    await page.goto('https://www.facebook.com/', { 
-      waitUntil: 'networkidle0', 
-      timeout: 60000 
-    });
+    // Faster navigation with reduced timeout
+    await page.goto('https://www.facebook.com/', { waitUntil: 'domcontentloaded', timeout: 30000 });
 
-    // Check if we need to login
-    const needsLogin = await page.$('#email') !== null;
-    if (needsLogin) {
-      console.log('Logging in with credentials');
+    if (await page.$('#email') !== null) {
+      console.log('Logging in as cookies are not valid or expired');
       await Promise.all([
-        page.type('#email', process.env.FB_EMAIL, { delay: 100 }),
-        page.type('#pass', process.env.FB_PASSWORD, { delay: 100 })
+        page.type('#email', process.env.FB_EMAIL, { delay: 0 }),
+        page.type('#pass', process.env.FB_PASSWORD, { delay: 0 })
       ]);
-      
-      // Click login and wait for navigation
       await Promise.all([
         page.click('[name="login"]'),
-        page.waitForNavigation({ 
-          waitUntil: 'networkidle0',
-          timeout: 60000 
-        })
+        page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 })
       ]);
-      
-      // Save cookies after successful login
       await saveCookies(page);
-      console.log('Login successful');
-    } else {
-      console.log('Already logged in');
     }
 
-    // Faster navigation with reduced timeout
-    await page.goto('https://v2.fewfeed.com/tool/auto-post-fb-group', { waitUntil: 'domcontentloaded', timeout: 30000 });
-    console.log(`Navigated to https://v2.fewfeed.com/tool/auto-post-fb-group`);
+    // Reduced delay
+    await delay(1000);
+
+    // Navigate to target URL with reduced timeout
+    const targetUrl = 'https://v2.fewfeed.com/tool/auto-post-fb-group';
+    await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    console.log(`Navigated to ${targetUrl}`);
 
     // Get hadith text
     const hadithText = await getRandomHadith();
