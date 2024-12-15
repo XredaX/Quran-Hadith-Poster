@@ -34,7 +34,7 @@ HEADLESS=true           # Set to false if you want to see the browser automation
 
 1. Clone the repository:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/XredaX/QuranPost.git
    cd autoPost
    ```
 
@@ -81,11 +81,3 @@ The Quran pages images used in this project are sourced from:
 
 ### Hadith Sources
 The Hadith content is carefully selected from authentic sources using the [Hadith API](https://api.hadith.gading.dev/) 
-
-## License
-
-This project is open source and available under the MIT License.
-
-## Last Updated
-
-2024-12-15
