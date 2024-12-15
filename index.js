@@ -310,7 +310,7 @@ const automatePosting = async () => {
 
     // Reduced wait time after posting (adjust as needed)
     console.log('Waiting 15 minutes for posts to be shared...');
-    await delay(15 * 60 * 1000); // 5 minutes
+    await delay(20 * 60 * 1000); // 5 minutes
     console.log('Wait completed');
 
   } catch (error) {
