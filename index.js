@@ -22,7 +22,7 @@ const launchBrowser = async () => {
   try {
     if (!browser) {
       browser = await puppeteer.launch({
-        headless: true,  // Changed to true for production
+        headless: false,  // Changed to true for production
         args: [
           `--disable-extensions-except=${extensionPath}`,
           `--load-extension=${extensionPath}`,
@@ -54,19 +54,56 @@ const launchBrowser = async () => {
   }
 };
 
-// Function to save cookies
-const saveCookies = async (page) => {
-  const cookies = await page.cookies();
-  fs.writeFileSync(cookiesPath, JSON.stringify(cookies, null, 2));
-  console.log('Cookies saved to file');
-};
-
 // Function to load cookies
 const loadCookies = async (page) => {
-  if (fs.existsSync(cookiesPath)) {
-    const cookies = JSON.parse(fs.readFileSync(cookiesPath));
-    await page.setCookie(...cookies);
-    console.log('Cookies loaded from file');
+  try {
+    const cookiesPath = path.resolve('cookies.json');
+    
+    // Check if cookies file exists and is not empty
+    if (fs.existsSync(cookiesPath)) {
+      const cookiesData = fs.readFileSync(cookiesPath, 'utf8');
+      if (cookiesData && cookiesData.trim()) {
+        const cookies = JSON.parse(cookiesData);
+        
+        // Validate cookies before setting them
+        if (Array.isArray(cookies) && cookies.length > 0) {
+          // Check if cookies are expired
+          const now = new Date().getTime();
+          const validCookies = cookies.filter(cookie => {
+            return !cookie.expires || new Date(cookie.expires * 1000).getTime() > now;
+          });
+          
+          if (validCookies.length > 0) {
+            await page.setCookie(...validCookies);
+            console.log('Cookies loaded successfully');
+            return;
+          }
+        }
+      }
+    }
+    
+    console.log('No valid cookies found, will need to login');
+  } catch (error) {
+    console.error('Error loading cookies:', error);
+    console.log('Will proceed with login due to cookie error');
+  }
+};
+
+// Function to save cookies
+const saveCookies = async (page) => {
+  try {
+    const cookiesPath = path.resolve('cookies.json');
+    const cookies = await page.cookies();
+    
+    // Only save if we have cookies
+    if (cookies && cookies.length > 0) {
+      fs.writeFileSync(cookiesPath, JSON.stringify(cookies, null, 2));
+      console.log('Cookies saved successfully');
+    } else {
+      console.warn('No cookies to save');
+    }
+  } catch (error) {
+    console.error('Error saving cookies:', error);
   }
 };
 
@@ -164,34 +201,47 @@ const getQuranImage = async () => {
 const automatePosting = async () => {
   try {
     const page = await launchBrowser();
+    
+    // Load cookies at the start
     await loadCookies(page);
     
     // Get Quran image from local directory
     const quranImage = await getQuranImage();
     
-    // Faster navigation with reduced timeout
-    await page.goto('https://www.facebook.com/', { waitUntil: 'domcontentloaded', timeout: 30000 });
+    // Navigate to Facebook with longer timeout
+    await page.goto('https://www.facebook.com/', { 
+      waitUntil: 'networkidle0', 
+      timeout: 60000 
+    });
 
-    if (await page.$('#email') !== null) {
-      console.log('Logging in as cookies are not valid or expired');
+    // Check if we need to login
+    const needsLogin = await page.$('#email') !== null;
+    if (needsLogin) {
+      console.log('Logging in with credentials');
       await Promise.all([
-        page.type('#email', process.env.FB_EMAIL, { delay: 0 }),
-        page.type('#pass', process.env.FB_PASSWORD, { delay: 0 })
+        page.type('#email', process.env.FB_EMAIL, { delay: 100 }),
+        page.type('#pass', process.env.FB_PASSWORD, { delay: 100 })
       ]);
+      
+      // Click login and wait for navigation
       await Promise.all([
         page.click('[name="login"]'),
-        page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 })
+        page.waitForNavigation({ 
+          waitUntil: 'networkidle0',
+          timeout: 60000 
+        })
       ]);
+      
+      // Save cookies after successful login
       await saveCookies(page);
+      console.log('Login successful');
+    } else {
+      console.log('Already logged in');
     }
 
-    // Reduced delay
-    await delay(1000);
-
-    // Navigate to target URL with reduced timeout
-    const targetUrl = 'https://v2.fewfeed.com/tool/auto-post-fb-group';
-    await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
-    console.log(`Navigated to ${targetUrl}`);
+    // Faster navigation with reduced timeout
+    await page.goto('https://v2.fewfeed.com/tool/auto-post-fb-group', { waitUntil: 'domcontentloaded', timeout: 30000 });
+    console.log(`Navigated to https://v2.fewfeed.com/tool/auto-post-fb-group`);
 
     // Get hadith text
     const hadithText = await getRandomHadith();
