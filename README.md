@@ -62,6 +62,17 @@ HEADLESS=true           # Set to false if you want to see the browser automation
 └── Dockerfile        # Dockerfile for building the application, so you can easy deploy it to Railway or any other platform
 ```
 
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## Contact
+
+Feel free to reach out if you have any questions or suggestions:
+
+- LinkedIn: [Reda El Bettioui](https://www.linkedin.com/in/reda-el-bettioui/)
+- Email: redaelbettioui@gmail.com
+
 ## References
 
 ### Quran Pages
@@ -69,11 +80,7 @@ The Quran pages images used in this project are sourced from:
 - [Quran Pages Images Repository](https://github.com/zeyadetman/quran-pages-images) by zeyadetman
 
 ### Hadith Sources
-The Hadith content is carefully selected from authentic sources using the [Hadith API](https://github.com/A7med3bdulBaset/hadith-api) by A7med3bdulBaset
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
+The Hadith content is carefully selected from authentic sources using the [Hadith API](https://api.hadith.gading.dev/) 
 
 ## License
 
