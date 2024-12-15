@@ -1,36 +1,37 @@
-# Use the official Node.js image as a base
-FROM node:16
+# Use Node.js base image
+FROM node:18-slim
 
-# Set the working directory
+# Install dependencies for Chrome
+RUN apt-get update && apt-get install -y \
+    wget \
+    gnupg \
+    procps \
+    chromium \
+    chromium-sandbox \
+    fonts-ipafont-gothic \
+    fonts-wqy-zenhei \
+    fonts-thai-tlwg \
+    fonts-kacst \
+    fonts-symbola \
+    fonts-noto-color-emoji \
+    --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set environment variables
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+
+# Create and set working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json
+# Copy package files
 COPY package*.json ./
 
 # Install dependencies
 RUN npm install
 
-# Copy the rest of the application code
+# Copy project files
 COPY . .
 
-# Install Puppeteer dependencies
-RUN apt-get update && apt-get install -y \
-    libnss3 \
-    libatk-bridge2.0-0 \
-    libx11-xcb1 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxrandr2 \
-    libgbm-dev \
-    libasound2 \
-    fonts-liberation \
-    libgtk-3-0 \
-    libxss1 \
-    libxshmfence1 \
-    && rm -rf /var/lib/apt/lists/*
-
-# Set the environment variable to disable the sandbox (optional)
-ENV PUPPETEER_SKIP_DOWNLOAD=true
-
-# Run the automation script
+# Start the application
 CMD ["node", "index.js"]
