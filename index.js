@@ -143,14 +143,21 @@ const getNextNumber = () => {
   const nextPage = currentPage >= maxPage ? 1 : currentPage + 1;
   process.env.CURRENT_PAGE = nextPage.toString();
   
-  // Save to .env file
-  const envPath = path.resolve('.env');
-  const envContent = fs.readFileSync(envPath, 'utf8');
-  const updatedContent = envContent.replace(
-    /CURRENT_PAGE=\d+/,
-    `CURRENT_PAGE=${nextPage}`
-  );
-  fs.writeFileSync(envPath, updatedContent);
+  // Try to update .env file if it exists (for local development)
+  try {
+    const envPath = path.resolve('.env');
+    if (fs.existsSync(envPath)) {
+      const envContent = fs.readFileSync(envPath, 'utf8');
+      const updatedContent = envContent.replace(
+        /CURRENT_PAGE=\d+/,
+        `CURRENT_PAGE=${nextPage}`
+      );
+      fs.writeFileSync(envPath, updatedContent);
+    }
+  } catch (error) {
+    // Silently continue if .env file is not accessible
+    console.log('Note: .env file not updated (this is normal in production)');
+  }
   
   return currentPage;
 };
