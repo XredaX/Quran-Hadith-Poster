@@ -134,38 +134,22 @@ const saveCookies = async (page) => {
   }
 };
 
-// Function to get next sequential number
+// Function to get random page number
 const getNextNumber = () => {
-  let currentPage = parseInt(process.env.CURRENT_PAGE) || 1;
   const maxPage = 604; // Total number of Quran pages
-  
-  // Save the next page number
-  const nextPage = currentPage >= maxPage ? 1 : currentPage + 1;
-  process.env.CURRENT_PAGE = nextPage.toString();
-  
-  // Try to update .env file if it exists (for local development)
-  try {
-    const envPath = path.resolve('.env');
-    if (fs.existsSync(envPath)) {
-      const envContent = fs.readFileSync(envPath, 'utf8');
-      const updatedContent = envContent.replace(
-        /CURRENT_PAGE=\d+/,
-        `CURRENT_PAGE=${nextPage}`
-      );
-      fs.writeFileSync(envPath, updatedContent);
-    }
-  } catch (error) {
-    // Silently continue if .env file is not accessible
-    console.log('Note: .env file not updated (this is normal in production)');
-  }
-  
-  return currentPage;
+  return Math.floor(Math.random() * maxPage) + 1;
 };
 
-// Function to get the next sequential hadith
+// Function to get random hadith number
+const getRandomHadithNumber = () => {
+  const maxHadith = 7008; // Total number of hadiths in Sahih Bukhari
+  return Math.floor(Math.random() * maxHadith) + 1;
+};
+
+// Function to get a random hadith
 const getSequentialHadith = async () => {
-  const currentPage = getNextNumber();
-  const url = `https://api.hadith.gading.dev/books/bukhari/${currentPage}`;
+  const hadithNumber = getRandomHadithNumber();
+  const url = `https://api.hadith.gading.dev/books/bukhari/${hadithNumber}`;
   
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
@@ -295,8 +279,8 @@ const automatePosting = async () => {
     console.log('Post button clicked');
 
     // Reduced wait time after posting (adjust as needed)
-    console.log('Waiting 15 minutes for posts to be shared...');
-    await delay(20 * 60 * 1000); // 5 minutes
+    console.log('Waiting 40 minutes for posts to be shared...');
+    await delay(60 * 60 * 1000); // 60 minutes
     console.log('Wait completed');
 
   } catch (error) {
@@ -312,8 +296,8 @@ const automatePosting = async () => {
   }
 };
 
-// Schedule to run at 2:00 PM every day (or as configured in .env)
-const schedule = process.env.CRON_SCHEDULE || '0 14 * * *';
+// Schedule to run at 2:00 PM and 6:00 PM every day (or as configured in .env)
+const schedule = process.env.CRON_SCHEDULE || '0 14,18 * * *';
 cron.schedule(schedule, () => {
   console.log(`Starting automation task at ${new Date().toLocaleString()}...`);
   automatePosting().catch(error => {
@@ -345,7 +329,6 @@ process.on('SIGINT', cleanup);
 
 console.log('Application started. Running with the following configuration:');
 console.log(`- Cron Schedule: ${schedule}`);
-console.log(`- Current Page: ${process.env.CURRENT_PAGE}`);
 console.log(`- Images Directory: ${path.resolve('quran-images')}`);
 
 // Reduced delay function
