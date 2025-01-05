@@ -296,19 +296,101 @@ const automatePosting = async () => {
   }
 };
 
-// Schedule to run at 2:00 PM and 6:00 PM every day (or as configured in .env)
-const schedule = process.env.CRON_SCHEDULE || '0 14,18 * * *';
-cron.schedule(schedule, () => {
-  console.log(`Starting automation task at ${new Date().toLocaleString()}...`);
-  automatePosting().catch(error => {
-    console.error('Failed to complete automation task:', error);
-    // If browser is still open after error, close it
+// Function to test login
+const testLogin = async () => {
+  console.log('Testing Facebook login...');
+  try {
+    if (!browser) {
+      await launchBrowser();
+    }
+
+    // Load cookies first
+    const cookiesLoaded = await loadCookies(page);
+    if (!cookiesLoaded) {
+      console.log('No valid cookies found, attempting fresh login...');
+    }
+
+    await page.goto('https://www.facebook.com', { waitUntil: 'networkidle0' });
+    
+    // Check if we need to login
+    const needsLogin = await page.evaluate(() => {
+      return !document.cookie.includes('c_user');
+    });
+
+    if (needsLogin) {
+      console.log('Not logged in, attempting login...');
+      // Fill in email
+      await page.type('#email', process.env.FB_EMAIL);
+      // Fill in password
+      await page.type('#pass', process.env.FB_PASSWORD);
+      // Click login button
+      await page.click('button[name="login"]');
+      
+      // Wait for navigation
+      await page.waitForNavigation({ waitUntil: 'networkidle0' });
+      
+      // Check if login was successful
+      const loginSuccessful = await page.evaluate(() => {
+        return document.cookie.includes('c_user');
+      });
+
+      if (loginSuccessful) {
+        console.log('Login successful!');
+        await saveCookies(page);
+        return true;
+      } else {
+        console.error('Login failed. Please check your credentials.');
+        return false;
+      }
+    } else {
+      console.log('Already logged in!');
+      return true;
+    }
+  } catch (error) {
+    console.error('Error during login test:', error);
+    return false;
+  } finally {
     if (browser) {
-      browser.close().catch(console.error);
+      await browser.close();
       browser = null;
       page = null;
+      console.log('Browser closed after login test');
     }
-  });
+  }
+};
+
+// Schedule to run at 2:00 PM and 6:00 PM every day (or as configured in .env)
+const schedule = process.env.CRON_SCHEDULE || '0 14,18 * * *';
+
+console.log('Application started. Running with the following configuration:');
+console.log(`- Cron Schedule: ${schedule}`);
+console.log(`- Images Directory: ${path.resolve('quran-images')}`);
+
+// Test login first, then set up cron job
+testLogin().then(loginSuccessful => {
+  if (loginSuccessful) {
+    console.log('Login test passed. Setting up scheduled tasks...');
+    // Schedule to run at specified times
+    cron.schedule(schedule, () => {
+      console.log(`Starting automation task at ${new Date().toLocaleString()}...`);
+      automatePosting().catch(error => {
+        console.error('Failed to complete automation task:', error);
+        // If browser is still open after error, close it
+        if (browser) {
+          browser.close().catch(console.error);
+          browser = null;
+          page = null;
+        }
+      });
+    });
+    console.log('Scheduled tasks set up successfully.');
+  } else {
+    console.error('Login test failed. Please check your credentials and try again.');
+    process.exit(1);
+  }
+}).catch(error => {
+  console.error('Fatal error during login test:', error);
+  process.exit(1);
 });
 
 // Handle process termination
@@ -326,10 +408,6 @@ const cleanup = async () => {
 
 process.on('SIGTERM', cleanup);
 process.on('SIGINT', cleanup);
-
-console.log('Application started. Running with the following configuration:');
-console.log(`- Cron Schedule: ${schedule}`);
-console.log(`- Images Directory: ${path.resolve('quran-images')}`);
 
 // Reduced delay function
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
