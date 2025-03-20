@@ -1,10 +1,12 @@
+// conda run -n quran-poster node index.js
+
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import path from 'path';
 import cron from 'node-cron';
 import fs from 'fs';
 import dotenv from 'dotenv';
-import fetch from 'node-fetch';  // Import fetch to make API requests
+import fetch from 'node-fetch';
 
 dotenv.config();  // Load environment variables
 puppeteer.use(StealthPlugin());
@@ -261,6 +263,76 @@ const automatePosting = async () => {
     
     // Upload the local Quran image
     console.log(`Uploading Quran page ${quranImage.pageNumber} from local directory`);
+    
+    // Set delay value to 10 - specifically targeting the Delay input
+    try {
+      // Wait for delay inputs to be visible and interactive
+      await delay(2000);
+      
+      // Target the second input[type="number"] which is the Delay input
+      // Or try to find it by looking for the label that contains "Delay"
+      await page.evaluate(() => {
+        // Find by label text approach
+        const delayLabels = Array.from(document.querySelectorAll('label, div'))
+          .filter(el => el.textContent.includes('Delay'));
+        
+        if (delayLabels.length > 0) {
+          console.log('Found delay label');
+          // Find the closest input to this label
+          const delayLabel = delayLabels[0];
+          const delayInput = delayLabel.nextElementSibling?.querySelector('input[type="number"]') || 
+                             delayLabel.parentElement?.querySelector('input[type="number"]');
+          
+          if (delayInput) {
+            console.log('Found delay input next to label');
+            delayInput.value = "10";
+            delayInput.dispatchEvent(new Event('input', { bubbles: true }));
+            delayInput.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        }
+        
+        // Fallback to getting all number inputs and using the second one
+        const allInputs = document.querySelectorAll('input[type="number"]');
+        if (allInputs.length >= 2) {
+          console.log('Using second number input as delay');
+          const delayInput = allInputs[1]; // The second input is the Delay
+          delayInput.value = "10";
+          delayInput.dispatchEvent(new Event('input', { bubbles: true }));
+          delayInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      });
+      
+      // Verify which values were set
+      const inputValues = await page.evaluate(() => {
+        const inputs = document.querySelectorAll('input[type="number"]');
+        return Array.from(inputs).map((input, index) => {
+          // Try to get the label for this input
+          const labels = Array.from(document.querySelectorAll('label, div'))
+            .filter(el => el.textContent.includes('Thread') || el.textContent.includes('Delay'));
+          
+          return {
+            index,
+            value: input.value,
+            nearestText: input.parentElement?.textContent || 'unknown'
+          };
+        });
+      });
+      console.log(`Input values after setting: ${JSON.stringify(inputValues)}`);
+      
+      // Direct approach using page actions
+      // First identify all inputs then click on the second one
+      const inputElements = await page.$$('input[type="number"]');
+      if (inputElements.length >= 2) {
+        // Click on the second input (Delay)
+        await inputElements[1].click({ clickCount: 3 }); // Triple click to select all text
+        await delay(500);
+        await page.keyboard.type('20'); // Type the value
+        console.log('Directly typed 20 into the second number input (Delay)');
+      }
+    } catch (error) {
+      console.error('Error setting delay value:', error);
+    }
+
     await inputUploadHandle.uploadFile(quranImage.path);
     console.log('Quran page image uploaded successfully');
 
@@ -280,7 +352,7 @@ const automatePosting = async () => {
 
     // Reduced wait time after posting (adjust as needed)
     console.log('Waiting 40 minutes for posts to be shared...');
-    await delay(60 * 60 * 1000); // 60 minutes
+    await delay(111 * 60 * 1000); // 60 minutes
     console.log('Wait completed');
 
   } catch (error) {
