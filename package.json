@@ -15,12 +15,12 @@
   "license": "ISC",
   "description": "Automated Quran and Hadith posting application",
   "dependencies": {
+    "dotenv": "^16.4.5",
     "express": "^4.21.1",
     "node-cron": "^3.0.3",
+    "node-fetch": "^3.3.0",
     "puppeteer": "^23.6.1",
     "puppeteer-extra": "^3.3.6",
-    "dotenv": "^16.4.5",
-    "puppeteer-extra-plugin-stealth": "^2.11.2",
-    "node-fetch": "^3.3.0"
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
   }
 }

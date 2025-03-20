@@ -9,16 +9,15 @@ This application leverages the [Fewfeed Chrome Extension](https://fewfeed.com/) 
 1. The app uses Puppeteer to control a Chrome browser instance with the Fewfeed extension installed
 2. It automatically logs into your Facebook account (using either credentials or cookies)
 3. For each posting cycle:
-   - Selects the next sequential Quran page from the `quran-images` directory
+   - Selects a random Quran page from the `quran-images` directory.
    - Fetches a random Hadith from the Hadith API
    - Uses Fewfeed's functionality to post this content to your configured Facebook groups
-   - Maintains a record of the last posted page to ensure sequential posting
 4. The entire process runs automatically based on your configured schedule (CRON_SCHEDULE)
 5. In development mode (HEADLESS=false), you can watch the automation process in action
 
 ## Features
 
-- 🕌 Sequential posting of Quran pages with proper formatting
+- 🕌 Random Quran pages with proper formatting
 - 📚 Random Hadith selection from verified sources
 - 👥 Automated posting to multiple Facebook groups
 - ⏰ Configurable posting schedule using cron expressions
@@ -38,7 +37,6 @@ Create a `.env` file in the root directory with the following variables:
 FB_EMAIL=your-facebook-email
 FB_PASSWORD=your-facebook-password
 CRON_SCHEDULE=* * * * *  # Cron schedule for posting (e.g., "0 * * * *" for hourly, "0 0 * * *" for daily)
-CURRENT_PAGE=1           # Starting Quran page number
 NODE_ENV=production      # or development
 FACEBOOK_COOKIES=[]      # Array of Facebook session cookies (required for production, leave empty for development)
 HEADLESS=true           # Set to false if you want to see the browser automation process (must be true in production)
@@ -48,8 +46,8 @@ HEADLESS=true           # Set to false if you want to see the browser automation
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/XredaX/QuranPost.git
-   cd autoPost
+   git https://github.com/XredaX/Quran-Hadith-Poster.git
+   cd Quran-Hadith-Poster
    ```
 
 2. Install dependencies:
