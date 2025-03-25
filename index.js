@@ -326,7 +326,7 @@ const automatePosting = async () => {
         // Click on the second input (Delay)
         await inputElements[1].click({ clickCount: 3 }); // Triple click to select all text
         await delay(500);
-        await page.keyboard.type('20'); // Type the value
+        await page.keyboard.type('30'); // Type the value
         console.log('Directly typed 20 into the second number input (Delay)');
       }
     } catch (error) {
