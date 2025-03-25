@@ -351,8 +351,8 @@ const automatePosting = async () => {
     console.log('Post button clicked');
 
     // Reduced wait time after posting (adjust as needed)
-    console.log('Waiting 40 minutes for posts to be shared...');
-    await delay(111 * 60 * 1000); // 60 minutes
+    console.log('Waiting 180 minutes for posts to be shared...');
+    await delay(180 * 60 * 1000); // 180 minutes
     console.log('Wait completed');
 
   } catch (error) {
