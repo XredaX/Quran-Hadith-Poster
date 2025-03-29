@@ -98,8 +98,17 @@ const loadCookies = async (page) => {
       }
     }
 
-    // Validate and set cookies
+    // Fix sameSite property to ensure it's always a valid string
     if (Array.isArray(cookies) && cookies.length > 0) {
+      cookies = cookies.map(cookie => {
+        // If sameSite is null or undefined, set it to "none"
+        if (cookie.sameSite === null || cookie.sameSite === undefined) {
+          cookie.sameSite = "none";
+        }
+        return cookie;
+      });
+      
+      // Validate and set cookies
       await page.setCookie(...cookies);
       console.log('Cookies loaded successfully');
       return true;
@@ -118,14 +127,23 @@ const saveCookies = async (page) => {
   try {
     const cookies = await page.cookies();
     
+    // Ensure sameSite property is valid before saving
+    const validatedCookies = cookies.map(cookie => {
+      // If sameSite is null or undefined, set it to "none"
+      if (cookie.sameSite === null || cookie.sameSite === undefined) {
+        cookie.sameSite = "none";
+      }
+      return cookie;
+    });
+    
     if (process.env.NODE_ENV === 'production') {
       // Update runtime cookies
-      runtimeCookies = cookies;
+      runtimeCookies = validatedCookies;
       console.log('Cookies updated in runtime memory');
     } else {
       // Development mode - save to file
       const cookiesPath = path.resolve('cookies.json');
-      fs.writeFileSync(cookiesPath, JSON.stringify(cookies, null, 2));
+      fs.writeFileSync(cookiesPath, JSON.stringify(validatedCookies, null, 2));
       console.log('Cookies saved to file');
     }
     
